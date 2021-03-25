@@ -3,9 +3,10 @@ name = "chat-application"
 version = "0.1.0"
 authors = ["Taylor Coffman <CoffmanTaylor96+git@gmail.com>"]
 edition = "2018"
+repository = "ssh://git@github.com/CoffmanTaylor/DS-Chat-App.git"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 chrono = "0.4.19"
-ds-libs = {path = "../ds-libs"}
+ds-libs = {git = "ssh://git@github.com/CoffmanTaylor/DS-libs.git", branch = "main"}
