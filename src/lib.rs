@@ -1,7 +1,7 @@
 use std::{collections::VecDeque, time::SystemTime};
 
 use chrono::{DateTime, Utc};
-use ds_test_network::Application;
+use ds_libs::Application;
 
 /// The maximum number of chat messages to keep in the history.
 const MAX_CHAT_MESSAGES: usize = 50;
