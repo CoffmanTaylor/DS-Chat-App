@@ -8,5 +8,19 @@ repository = "ssh://git@github.com/CoffmanTaylor/DS-Chat-App.git"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-chrono = "0.4.19"
+chrono = "0.4"
+tui = {version = "0.14", default-features = false, features = ['crossterm'] }
+crossterm = {version = "0.19", features = ['event-stream'] }
+futures = "0.3"
 ds-libs = {git = "ssh://git@github.com/CoffmanTaylor/DS-libs.git", branch = "main"}
+
+[lib]
+path = "src/application.rs"
+
+[[bin]]
+name = "chat-server"
+path = "src/server/server.rs"
+
+[[bin]]
+name = "chat-client"
+path = "src/client/client.rs"

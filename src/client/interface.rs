@@ -1,0 +1,80 @@
+use std::io::{self, Stdout};
+
+use chat_application::Message;
+use crossterm::terminal::enable_raw_mode;
+use tui::{
+    backend::CrosstermBackend,
+    layout::{Constraint, Direction, Layout},
+    widgets::{Block, Borders, Paragraph},
+    Terminal,
+};
+
+pub struct Interface {
+    terminal: Terminal<CrosstermBackend<Stdout>>,
+    history: Vec<Message>,
+    input: String,
+}
+
+impl Interface {
+    pub fn new() -> Interface {
+        // Construct the terminal.
+        let stdout = io::stdout();
+        let backend = CrosstermBackend::new(stdout);
+        enable_raw_mode().unwrap();
+
+        let mut out = Interface {
+            terminal: Terminal::new(backend).unwrap(),
+            input: String::new(),
+            history: Vec::new(),
+        };
+
+        out.terminal.clear().unwrap();
+        out.render();
+
+        out
+    }
+
+    pub fn set_history(&mut self, history: Vec<Message>) {
+        self.history = history;
+        self.render();
+    }
+
+    pub fn clear_input(&mut self) {
+        self.input.clear();
+        self.render();
+    }
+
+    pub fn push_input(&mut self, c: char) {
+        self.input.push(c);
+        self.render();
+    }
+
+    pub fn pop_input(&mut self) {
+        self.input.pop();
+        self.render();
+    }
+
+    pub fn close(&mut self) {
+        self.terminal.clear().unwrap();
+    }
+
+    pub fn render(&mut self) {
+        let input_text = self.input.clone();
+        self.terminal
+            .draw(|f| {
+                // Split the screen in two.
+                let sections = Layout::default()
+                    .direction(Direction::Vertical)
+                    .constraints([Constraint::Percentage(80), Constraint::Percentage(20)])
+                    .split(f.size());
+
+                let chat_history = Block::default().title("Chat History").borders(Borders::ALL);
+                f.render_widget(chat_history, sections[0]);
+
+                let input =
+                    Paragraph::new(input_text + "_").block(Block::default().borders(Borders::ALL));
+                f.render_widget(input, sections[1]);
+            })
+            .unwrap();
+    }
+}
