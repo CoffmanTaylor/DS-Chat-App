@@ -1,11 +1,11 @@
-use std::{net::Ipv6Addr, str::FromStr};
+use std::{net::Ipv6Addr, str::FromStr, time::SystemTime};
 
 use chat_application::{
     context::{self, Ctx},
-    ChatResponse,
+    ChatCommand, ChatResponse, Message,
 };
 use crossterm::event::{EventStream, KeyCode, KeyModifiers};
-use ds_libs::{address::Address, Context, InitializeNode};
+use ds_libs::{address::Address, Context, HandleMessage, HandleTimer, InitializeNode};
 use futures::{select, Stream, StreamExt};
 use interface::Interface;
 use simple_server::user::Client;
@@ -24,7 +24,9 @@ async fn main() {
     let mut terminal_events = key_events().fuse();
     let mut client_events = ctx.event_stream().boxed().fuse();
 
-    node.init(&mut Context::new(node_address, &mut ctx));
+    let mut ctx = Context::new(node_address, &mut ctx);
+
+    node.init(&mut ctx);
 
     loop {
         select! {
@@ -40,7 +42,11 @@ async fn main() {
                                 interface.pop_input();
                             },
                             KeyCode::Enter => {
-                                let _message = interface.clear_input();
+                                if node.command.is_none() {
+                                    let text = interface.clear_input();
+                                    node.command = Some(ChatCommand::Post(Message{sender:name.clone(), text, sent_time: SystemTime::now().into()}));
+                                    node.send_command(&mut ctx);
+                                }
                             },
                             KeyCode::Char('c') if key.modifiers == KeyModifiers::CONTROL => {
                                 // Brake on a ctrl-c
@@ -58,14 +64,26 @@ async fn main() {
             event = client_events.select_next_some() => {
                 match event {
                     context::Event::Response(res) => {
-                        match res.result {
-                            ChatResponse::Latest(history, _) => {
+                        node.handle_message(&mut ctx, res);
+
+                        // Check if the client got a response.
+                        match node.response.take() {
+                            Some(ChatResponse::Latest(history, _)) => {
+                                node.command = None;
                                 interface.set_history(history);
+                            },
+                            Some(_) => {
+                                node.command = None;
                             },
                             _ => {},
                         }
                     },
-                    _ => {},
+                    context::Event::Request(_) => {
+                        // Clients don't handle Requests.
+                    },
+                    context::Event::ResendTimer(t) => {
+                        node.handle_timer(&mut ctx, t);
+                    },
                 }
             },
         };
