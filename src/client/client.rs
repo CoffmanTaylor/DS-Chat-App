@@ -1,4 +1,4 @@
-use std::{net::Ipv6Addr, str::FromStr, time::Duration, time::SystemTime};
+use std::{env, net::Ipv6Addr, str::FromStr, time::Duration, time::SystemTime};
 
 use chat_application::{
     context::{self, Ctx},
@@ -6,24 +6,27 @@ use chat_application::{
 };
 use crossterm::event::{EventStream, KeyCode, KeyModifiers};
 use ds_libs::{address::Address, Context, HandleMessage, HandleTimer, InitializeNode};
-use futures::{select, stream::poll_fn, FutureExt, Stream, StreamExt};
+use futures::{select, FutureExt, Stream, StreamExt};
 use interface::Interface;
 use simple_server::user::Client;
-use tokio::time::{interval, sleep};
+use tokio::time::sleep;
 
 mod interface;
 
 #[tokio::main]
 async fn main() {
-    let name = "Taylor".to_string();
+    let args: Vec<_> = env::args().collect();
+
+    let name = args[1].clone();
+    let port = args[2].parse().unwrap();
 
     let mut interface = Interface::new();
-    let node_address = Address::new((Ipv6Addr::from_str("::1").unwrap(), 8080));
+    let node_address = Address::new((Ipv6Addr::from_str("::1").unwrap(), port));
     let mut node = Client::new(
         Address::new((Ipv6Addr::from_str("::1").unwrap(), 8081)),
         None,
     );
-    let mut ctx = Ctx::new(("::1", 8080)).await;
+    let mut ctx = Ctx::new(("::1", port)).await;
 
     let mut terminal_events = key_events().fuse();
     let mut client_events = ctx.event_stream().boxed().fuse();

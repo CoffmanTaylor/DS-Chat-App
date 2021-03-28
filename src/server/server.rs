@@ -26,7 +26,6 @@ async fn main() {
             // Servers don't handle Responses or ResendTimers.
             context::Event::Response(_) | context::Event::ResendTimer(_) => {}
             context::Event::Request(req) => {
-                println!("Handling req: {:?}", req);
                 node.handle_message(&mut ctx, req);
             }
         }
