@@ -1,11 +1,13 @@
-use std::io::{self, Stdout};
-
 use chat_application::Message;
-use crossterm::terminal::enable_raw_mode;
+use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
+use std::{
+    io::{self, Stdout},
+    time::SystemTime,
+};
 use tui::{
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout},
-    widgets::{Block, Borders, Paragraph},
+    widgets::{Block, Borders, List, ListItem, Paragraph},
     Terminal,
 };
 
@@ -25,7 +27,11 @@ impl Interface {
         let mut out = Interface {
             terminal: Terminal::new(backend).unwrap(),
             input: String::new(),
-            history: Vec::new(),
+            history: vec![Message {
+                sender: "Taylor".to_string(),
+                text: "Hello World!".to_string(),
+                sent_time: SystemTime::now().into(),
+            }],
         };
 
         out.terminal.clear().unwrap();
@@ -39,9 +45,10 @@ impl Interface {
         self.render();
     }
 
-    pub fn clear_input(&mut self) {
-        self.input.clear();
+    pub fn clear_input(&mut self) -> String {
+        let out = std::mem::take(&mut self.input);
         self.render();
+        out
     }
 
     pub fn push_input(&mut self, c: char) {
@@ -56,10 +63,12 @@ impl Interface {
 
     pub fn close(&mut self) {
         self.terminal.clear().unwrap();
+        disable_raw_mode().unwrap();
     }
 
     pub fn render(&mut self) {
         let input_text = self.input.clone();
+        let history = self.history.clone();
         self.terminal
             .draw(|f| {
                 // Split the screen in two.
@@ -68,7 +77,9 @@ impl Interface {
                     .constraints([Constraint::Percentage(80), Constraint::Percentage(20)])
                     .split(f.size());
 
-                let chat_history = Block::default().title("Chat History").borders(Borders::ALL);
+                let chat_history =
+                    List::new(history.into_iter().map(Message::into).collect::<Vec<_>>())
+                        .block(Block::default().title("Chat History").borders(Borders::ALL));
                 f.render_widget(chat_history, sections[0]);
 
                 let input =
