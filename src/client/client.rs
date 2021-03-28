@@ -1,4 +1,4 @@
-use std::{net::Ipv6Addr, str::FromStr, time::SystemTime};
+use std::{net::Ipv6Addr, str::FromStr, time::Duration, time::SystemTime};
 
 use chat_application::{
     context::{self, Ctx},
@@ -6,9 +6,10 @@ use chat_application::{
 };
 use crossterm::event::{EventStream, KeyCode, KeyModifiers};
 use ds_libs::{address::Address, Context, HandleMessage, HandleTimer, InitializeNode};
-use futures::{select, Stream, StreamExt};
+use futures::{select, stream::poll_fn, FutureExt, Stream, StreamExt};
 use interface::Interface;
 use simple_server::user::Client;
+use tokio::time::{interval, sleep};
 
 mod interface;
 
@@ -18,7 +19,10 @@ async fn main() {
 
     let mut interface = Interface::new();
     let node_address = Address::new((Ipv6Addr::from_str("::1").unwrap(), 8080));
-    let mut node = Client::new(Address::new_test_id(1), None);
+    let mut node = Client::new(
+        Address::new((Ipv6Addr::from_str("::1").unwrap(), 8081)),
+        None,
+    );
     let mut ctx = Ctx::new(("::1", 8080)).await;
 
     let mut terminal_events = key_events().fuse();
@@ -27,6 +31,8 @@ async fn main() {
     let mut ctx = Context::new(node_address, &mut ctx);
 
     node.init(&mut ctx);
+
+    let mut latest_id = 0;
 
     loop {
         select! {
@@ -68,9 +74,10 @@ async fn main() {
 
                         // Check if the client got a response.
                         match node.response.take() {
-                            Some(ChatResponse::Latest(history, _)) => {
+                            Some(ChatResponse::Latest(history, id)) if id > latest_id => {
                                 node.command = None;
                                 interface.set_history(history);
+                                latest_id = id;
                             },
                             Some(_) => {
                                 node.command = None;
@@ -86,6 +93,13 @@ async fn main() {
                     },
                 }
             },
+            _ = sleep(Duration::from_millis(500)).fuse() => {
+                // poll the server for the latest history.
+                if node.command.is_none() {
+                    node.command = Some(ChatCommand::GetLatest(latest_id));
+                    node.send_command(&mut ctx);
+                }
+            }
         };
     }
 
