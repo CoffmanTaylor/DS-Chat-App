@@ -67,6 +67,12 @@ impl ChatApp {
     }
 }
 
+impl Default for ChatApp {
+    fn default() -> Self {
+        ChatApp::new()
+    }
+}
+
 impl Message {
     /// Construct a new message with the send_time set to the current time.
     pub fn new(sender: String, text: String) -> Message {
