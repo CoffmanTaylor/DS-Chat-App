@@ -3,7 +3,8 @@ name = "chat-application"
 version = "0.1.0"
 authors = ["Taylor Coffman <CoffmanTaylor96+git@gmail.com>"]
 edition = "2018"
-repository = "ssh://git@github.com/CoffmanTaylor/DS-Chat-App.git"
+license = "GPL-3.0-or-later"
+repository = "https://github.com/CoffmanTaylor/DS-Chat-App.git"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -12,8 +13,8 @@ chrono = {version = "0.4", features = ['serde']}
 tui = {version = "0.14", default-features = false, features = ['crossterm'] }
 crossterm = {version = "0.19", features = ['event-stream'] }
 futures = "0.3"
-ds-libs = {git = "ssh://git@github.com/CoffmanTaylor/DS-libs.git", branch = "main"}
-simple-server = {git = "ssh://git@github.com/CoffmanTaylor/DS-Simple-Server.git", branch = "main"}
+ds-libs = {git = "https://github.com/CoffmanTaylor/DS-libs.git", tag = "v0.1.0"}
+simple-server = {git = "https://github.com/CoffmanTaylor/DS-Simple-Server.git", tag = "v0.1.0"}
 tokio = {version = "1.4.0", features = ['net', 'time', 'rt-multi-thread', 'macros']}
 serde = {version = "1.0.125", features = ["derive"]}
 bincode = "1.3"
