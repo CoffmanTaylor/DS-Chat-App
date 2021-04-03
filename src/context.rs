@@ -29,7 +29,7 @@ impl<'a> Ctx<'a> {
     where
         A: ToSocketAddrs,
     {
-        let socket = UdpSocket::bind(addr).await.unwrap();
+        let socket = UdpSocket::bind(addr).await.expect("Failed to bind address");
         let (sender, receiver) = unbounded();
 
         let timer_stream = Some(TimerStream::new(receiver));

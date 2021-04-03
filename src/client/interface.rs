@@ -1,9 +1,6 @@
 use chat_application::Message;
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
-use std::{
-    io::{self, Stdout},
-    time::SystemTime,
-};
+use std::io::{self, Stdout};
 use tui::{
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout},
@@ -27,11 +24,7 @@ impl Interface {
         let mut out = Interface {
             terminal: Terminal::new(backend).unwrap(),
             input: String::new(),
-            history: vec![Message {
-                sender: "Taylor".to_string(),
-                text: "Hello World!".to_string(),
-                sent_time: SystemTime::now().into(),
-            }],
+            history: vec![],
         };
 
         out.terminal.clear().unwrap();

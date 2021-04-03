@@ -1,6 +1,6 @@
 [package]
 name = "chat-application"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Taylor Coffman <CoffmanTaylor96+git@gmail.com>"]
 edition = "2018"
 license = "GPL-3.0-or-later"

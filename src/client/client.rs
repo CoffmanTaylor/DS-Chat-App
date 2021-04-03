@@ -1,4 +1,4 @@
-use std::{env, net::Ipv6Addr, str::FromStr, time::Duration, time::SystemTime};
+use std::{env, net::SocketAddrV6, str::FromStr, time::Duration, time::SystemTime};
 
 use chat_application::{
     context::{self, Ctx},
@@ -17,21 +17,36 @@ mod interface;
 async fn main() {
     let args: Vec<_> = env::args().collect();
 
+    if args.len() != 4 {
+        eprintln!("You must provide only 3 arguments: <your-name> <local IPv6 address and port. Ex: [::1]:8081> <server IPv6 address and port. Ex: [::1]:8080>");
+        return;
+    }
+
     let name = args[1].clone();
-    let port = args[2].parse().unwrap();
+    let local_address = Address::new(match SocketAddrV6::from_str(&args[2]) {
+        Ok(addr) => (addr.ip().clone(), addr.port()),
+        Err(_) => {
+            eprintln!("Invalid local IPv6 address and port.");
+            return;
+        }
+    });
+    let server_address = Address::new(match SocketAddrV6::from_str(&args[3]) {
+        Ok(addr) => (addr.ip().clone(), addr.port()),
+        Err(_) => {
+            eprintln!("Invalid server IPv6 address and port.");
+            return;
+        }
+    });
 
     let mut interface = Interface::new();
-    let node_address = Address::new((Ipv6Addr::from_str("::1").unwrap(), port));
-    let mut node = Client::new(
-        Address::new((Ipv6Addr::from_str("::1").unwrap(), 8081)),
-        None,
-    );
-    let mut ctx = Ctx::new(("::1", port)).await;
+
+    let mut node = Client::new(server_address, None);
+    let mut ctx = Ctx::new(local_address.id()).await;
 
     let mut terminal_events = key_events().fuse();
     let mut client_events = ctx.event_stream().boxed().fuse();
 
-    let mut ctx = Context::new(node_address, &mut ctx);
+    let mut ctx = Context::new(local_address, &mut ctx);
 
     node.init(&mut ctx);
 

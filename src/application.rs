@@ -8,7 +8,7 @@ use tui::widgets::ListItem;
 pub mod context;
 
 /// The maximum number of chat messages to keep in the history.
-pub const MAX_CHAT_MESSAGES: usize = 5;
+pub const MAX_CHAT_MESSAGES: usize = 10;
 pub const MAX_MESSAGE_SIZE: usize = 100;
 
 /// The backend data for a basic chat app.
