@@ -1,5 +1,6 @@
-use std::{env, net::SocketAddrV6, str::FromStr, time::Duration, time::SystemTime};
+use std::{env, net::ToSocketAddrs, time::Duration, time::SystemTime};
 
+use anyhow::{anyhow, Result};
 use chat_application::{
     context::{self, Ctx},
     ChatCommand, ChatResponse, Message,
@@ -13,6 +14,22 @@ use tokio::time::sleep;
 
 mod interface;
 
+fn parse_address<Node>(s: &str) -> Result<Address<Node>> {
+    for ip_port in s.to_socket_addrs()? {
+        match ip_port {
+            std::net::SocketAddr::V6(ip_port) => {
+                return Ok(Address::new((ip_port.ip().clone(), ip_port.port())))
+            }
+            _ => {}
+        }
+    }
+
+    Err(anyhow!(
+        "Failed to produce an IPv6:port pair from the provided address: {}",
+        s
+    ))
+}
+
 #[tokio::main]
 async fn main() {
     let args: Vec<_> = env::args().collect();
@@ -23,20 +40,20 @@ async fn main() {
     }
 
     let name = args[1].clone();
-    let local_address = Address::new(match SocketAddrV6::from_str(&args[2]) {
-        Ok(addr) => (addr.ip().clone(), addr.port()),
-        Err(_) => {
-            eprintln!("Invalid local IPv6 address and port.");
+    let local_address = match parse_address(&args[2]) {
+        Ok(a) => a,
+        Err(e) => {
+            eprintln!("Failed to get the local address: {:?}", e);
             return;
         }
-    });
-    let server_address = Address::new(match SocketAddrV6::from_str(&args[3]) {
-        Ok(addr) => (addr.ip().clone(), addr.port()),
-        Err(_) => {
-            eprintln!("Invalid server IPv6 address and port.");
+    };
+    let server_address = match parse_address(&args[3]) {
+        Ok(a) => a,
+        Err(e) => {
+            eprintln!("Failed to get the server address: {:?}", e);
             return;
         }
-    });
+    };
 
     let mut interface = Interface::new();
 

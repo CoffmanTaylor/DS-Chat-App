@@ -18,6 +18,7 @@ simple-server = {git = "https://github.com/CoffmanTaylor/DS-Simple-Server.git", 
 tokio = {version = "1.4.0", features = ['net', 'time', 'rt-multi-thread', 'macros']}
 serde = {version = "1.0.125", features = ["derive"]}
 bincode = "1.3"
+anyhow = "1.0"
 
 [lib]
 path = "src/application.rs"

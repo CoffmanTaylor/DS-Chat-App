@@ -5,7 +5,25 @@ use chat_application::{
 use ds_libs::{address::Address, HandleMessage, InitializeNode};
 use futures::StreamExt;
 use simple_server::user::Server;
-use std::{env, net::SocketAddrV6, str::FromStr};
+use std::{env, net::ToSocketAddrs};
+
+use anyhow::{anyhow, Result};
+
+fn parse_address<Node>(s: &str) -> Result<Address<Node>> {
+    for ip_port in s.to_socket_addrs()? {
+        match ip_port {
+            std::net::SocketAddr::V6(ip_port) => {
+                return Ok(Address::new((ip_port.ip().clone(), ip_port.port())))
+            }
+            _ => {}
+        }
+    }
+
+    Err(anyhow!(
+        "Failed to produce an IPv6:port pair from the provided address: {}",
+        s
+    ))
+}
 
 #[tokio::main]
 async fn main() {
@@ -19,13 +37,13 @@ async fn main() {
         return;
     }
 
-    let node_address = Address::new(match SocketAddrV6::from_str(&args[1]) {
-        Ok(addr) => (addr.ip().clone(), addr.port()),
-        Err(_) => {
-            eprintln!("Invalid local IPv6 address and port.");
+    let node_address = match parse_address(&args[1]) {
+        Ok(a) => a,
+        Err(e) => {
+            eprintln!("Failed to get the local address: {:?}", e);
             return;
         }
-    });
+    };
 
     // Construct the server.
     let mut node = Server::new(ChatApp::new());
