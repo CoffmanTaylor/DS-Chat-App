@@ -54,7 +54,7 @@ impl<'a> Ctx<'a> {
             self.timer_stream
                 .take()
                 .unwrap()
-                .map(|r| Event::ResendTimer(r)),
+                .map(Event::ResendTimer),
         )
     }
 

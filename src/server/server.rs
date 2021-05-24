@@ -11,11 +11,8 @@ use anyhow::{anyhow, Result};
 
 fn parse_address<Node>(s: &str) -> Result<Address<Node>> {
     for ip_port in s.to_socket_addrs()? {
-        match ip_port {
-            std::net::SocketAddr::V6(ip_port) => {
-                return Ok(Address::new((ip_port.ip().clone(), ip_port.port())))
-            }
-            _ => {}
+        if let std::net::SocketAddr::V6(ip_port) = ip_port {
+            return Ok(Address::new((*ip_port.ip(), ip_port.port())))
         }
     }
 

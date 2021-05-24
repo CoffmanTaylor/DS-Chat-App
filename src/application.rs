@@ -26,13 +26,13 @@ pub struct Message {
     pub sender: String,
 }
 
-impl<'a> Into<ListItem<'a>> for Message {
-    fn into(self) -> ListItem<'a> {
+impl<'a> From<Message> for ListItem<'a> {
+    fn from(val: Message) -> Self {
         ListItem::new(format!(
             "{} - {}: {}",
-            self.sent_time.with_timezone(&Local).format("%I:%M%P"),
-            self.sender,
-            self.text
+            val.sent_time.with_timezone(&Local).format("%I:%M%P"),
+            val.sender,
+            val.text
         ))
     }
 }
